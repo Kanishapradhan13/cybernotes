@@ -69,9 +69,32 @@ export default function DashboardClient({
             </p>
           </div>
 
-          <Link href="/notes/new" className="btn-solid-green btn-neon">
-            + New Note
-          </Link>
+          <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
+            <Link
+              href="/public"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "0.4rem",
+                padding: "0.5rem 1rem",
+                border: "1px solid rgba(196,181,253,0.35)",
+                color: "#c4b5fd",
+                background: "transparent",
+                fontFamily: "JetBrains Mono, monospace",
+                fontSize: "0.78rem",
+                textDecoration: "none",
+                borderRadius: "6px",
+                transition: "all 0.2s",
+              }}
+            >
+              ↗ public view
+            </Link>
+            <Link href="/notes/new" className="btn-solid-green btn-neon">
+              + New Note
+            </Link>
+          </div>
         </div>
 
         {/* Search */}

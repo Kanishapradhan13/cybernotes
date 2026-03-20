@@ -1,4 +1,4 @@
-import { getSupabase } from "./supabase";
+import { getSupabase, getPublicSupabase } from "./supabase";
 
 export type Note = {
   id: string;
@@ -56,6 +56,31 @@ export async function getNoteById(userId: string, id: string): Promise<Note | nu
     .eq("id", id)
     .single();
 
+  if (error) {
+    if (error.code === "PGRST116") return null;
+    throw new Error(`Failed to fetch note: ${error.message}`);
+  }
+  return data;
+}
+
+// Public (no auth) — uses service role key, returns all notes for the site owner
+export async function getPublicNotes(): Promise<Note[]> {
+  const supabase = getPublicSupabase();
+  const { data, error } = await supabase
+    .from("notes")
+    .select("*")
+    .order("created_at", { ascending: false });
+  if (error) throw new Error(`Failed to fetch notes: ${error.message}`);
+  return data ?? [];
+}
+
+export async function getPublicNoteById(id: string): Promise<Note | null> {
+  const supabase = getPublicSupabase();
+  const { data, error } = await supabase
+    .from("notes")
+    .select("*")
+    .eq("id", id)
+    .single();
   if (error) {
     if (error.code === "PGRST116") return null;
     throw new Error(`Failed to fetch note: ${error.message}`);
