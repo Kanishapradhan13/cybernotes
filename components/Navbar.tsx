@@ -59,7 +59,7 @@ export default function Navbar() {
           </Link>
 
           {/* Nav links */}
-          <div style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
+          <div className="nav-links" style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
             {isLoaded && isSignedIn ? (
               <>
                 <Link

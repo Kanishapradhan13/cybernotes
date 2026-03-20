@@ -19,12 +19,8 @@ function SubmitButton({ mode }: { mode: "create" | "edit" }) {
       style={{ opacity: pending ? 0.6 : 1, cursor: pending ? "not-allowed" : "pointer" }}
     >
       {pending
-        ? mode === "create"
-          ? "creating..."
-          : "saving..."
-        : mode === "create"
-        ? "create_note"
-        : "save_changes"}
+        ? mode === "create" ? "creating..." : "saving..."
+        : mode === "create" ? "create note ✦" : "save changes ✦"}
     </button>
   );
 }
@@ -42,17 +38,13 @@ export default function NoteForm({ action, mode, note }: NoteFormProps) {
   const [tags, setTags] = useState(note?.tags?.join(", ") ?? "");
   const [tab, setTab] = useState<"write" | "preview">("write");
 
-  // Ctrl+S to submit
-  const handleKeyDown = useCallback(
-    (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === "s") {
-        e.preventDefault();
-        const form = document.getElementById("note-form") as HTMLFormElement;
-        if (form) form.requestSubmit();
-      }
-    },
-    []
-  );
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+      e.preventDefault();
+      const form = document.getElementById("note-form") as HTMLFormElement;
+      if (form) form.requestSubmit();
+    }
+  }, []);
 
   useEffect(() => {
     window.addEventListener("keydown", handleKeyDown);
@@ -60,29 +52,29 @@ export default function NoteForm({ action, mode, note }: NoteFormProps) {
   }, [handleKeyDown]);
 
   return (
-    <div style={{ minHeight: "calc(100vh - 56px)", background: "#0a0a0a", padding: "2rem 1.5rem" }}>
+    <div style={{ minHeight: "calc(100vh - 56px)", background: "#0f0b1a", padding: "2rem 1.5rem" }}>
       <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
+
         {/* Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem", flexWrap: "wrap", gap: "1rem" }}>
           <div>
-            <p style={{ color: "#5a6478", fontFamily: "JetBrains Mono, monospace", fontSize: "0.8rem", marginBottom: "0.25rem" }}>
-              <span style={{ color: "#00ff9d" }}>&gt; </span>
-              {mode === "create" ? "new_note" : "edit_note"}
+            <p style={{ color: "#7c6a9e", fontFamily: "JetBrains Mono, monospace", fontSize: "0.8rem", marginBottom: "0.25rem" }}>
+              ✦ {mode === "create" ? "new note" : "edit note"}
             </p>
-            <h1
-              style={{ fontFamily: "JetBrains Mono, monospace", fontSize: "1.25rem", fontWeight: 700, color: "#e0e0e0" }}
-            >
+            <h1 style={{ fontFamily: "JetBrains Mono, monospace", fontSize: "1.25rem", fontWeight: 700, color: "#ede9fe" }}>
               {mode === "create" ? "Create Note" : "Edit Note"}
             </h1>
           </div>
-          <span style={{ color: "#5a6478", fontFamily: "JetBrains Mono, monospace", fontSize: "0.7rem" }}>
-            Ctrl+S to save
+          <span style={{ color: "#3d2f5a", fontFamily: "JetBrains Mono, monospace", fontSize: "0.7rem" }}>
+            ⌘S to save
           </span>
         </div>
 
         <form id="note-form" action={action}>
+
           {/* Title + Category row */}
           <div
+            className="title-category-row"
             style={{
               display: "grid",
               gridTemplateColumns: "1fr auto",
@@ -92,7 +84,7 @@ export default function NoteForm({ action, mode, note }: NoteFormProps) {
             }}
           >
             <div>
-              <label style={{ display: "block", color: "#5a6478", fontFamily: "JetBrains Mono, monospace", fontSize: "0.75rem", marginBottom: "0.4rem" }}>
+              <label style={{ display: "block", color: "#7c6a9e", fontFamily: "JetBrains Mono, monospace", fontSize: "0.75rem", marginBottom: "0.4rem" }}>
                 title
               </label>
               <input
@@ -108,7 +100,7 @@ export default function NoteForm({ action, mode, note }: NoteFormProps) {
             </div>
 
             <div>
-              <label style={{ display: "block", color: "#5a6478", fontFamily: "JetBrains Mono, monospace", fontSize: "0.75rem", marginBottom: "0.4rem" }}>
+              <label style={{ display: "block", color: "#7c6a9e", fontFamily: "JetBrains Mono, monospace", fontSize: "0.75rem", marginBottom: "0.4rem" }}>
                 category
               </label>
               <select
@@ -119,7 +111,7 @@ export default function NoteForm({ action, mode, note }: NoteFormProps) {
                 style={{ minWidth: "180px", cursor: "pointer" }}
               >
                 {CATEGORIES.map((c) => (
-                  <option key={c} value={c} style={{ background: "#111318" }}>
+                  <option key={c} value={c} style={{ background: "#1a1228" }}>
                     {c}
                   </option>
                 ))}
@@ -136,7 +128,7 @@ export default function NoteForm({ action, mode, note }: NoteFormProps) {
 
           {/* Tags */}
           <div style={{ marginBottom: "1.25rem" }}>
-            <label style={{ display: "block", color: "#5a6478", fontFamily: "JetBrains Mono, monospace", fontSize: "0.75rem", marginBottom: "0.4rem" }}>
+            <label style={{ display: "block", color: "#7c6a9e", fontFamily: "JetBrains Mono, monospace", fontSize: "0.75rem", marginBottom: "0.4rem" }}>
               tags <span style={{ opacity: 0.5 }}>(comma-separated)</span>
             </label>
             <input
@@ -149,7 +141,7 @@ export default function NoteForm({ action, mode, note }: NoteFormProps) {
             />
           </div>
 
-          {/* Editor/Preview toggle */}
+          {/* Write / Preview tabs */}
           <div style={{ marginBottom: "0.5rem", display: "flex", gap: "0.5rem" }}>
             {(["write", "preview"] as const).map((t) => (
               <button
@@ -157,13 +149,14 @@ export default function NoteForm({ action, mode, note }: NoteFormProps) {
                 type="button"
                 onClick={() => setTab(t)}
                 style={{
-                  background: tab === t ? "rgba(0,255,157,0.1)" : "transparent",
-                  border: `1px solid ${tab === t ? "#00ff9d" : "#1e2430"}`,
-                  color: tab === t ? "#00ff9d" : "#5a6478",
+                  background: tab === t ? "rgba(196,181,253,0.1)" : "transparent",
+                  border: `1px solid ${tab === t ? "#c4b5fd" : "#2e1f4a"}`,
+                  color: tab === t ? "#c4b5fd" : "#7c6a9e",
                   fontFamily: "JetBrains Mono, monospace",
                   fontSize: "0.75rem",
                   padding: "0.3rem 0.75rem",
                   cursor: "pointer",
+                  borderRadius: "4px",
                   transition: "all 0.2s",
                 }}
               >
@@ -172,8 +165,9 @@ export default function NoteForm({ action, mode, note }: NoteFormProps) {
             ))}
           </div>
 
-          {/* Split editor / preview */}
+          {/* Split editor / preview — stacks to 1 col on mobile via .split-editor */}
           <div
+            className="split-editor"
             style={{
               display: "grid",
               gridTemplateColumns: "1fr 1fr",
@@ -182,21 +176,20 @@ export default function NoteForm({ action, mode, note }: NoteFormProps) {
             }}
           >
             {/* Editor */}
-            <div style={{ display: "flex", flexDirection: "column" }}>
-              <div
-                style={{
-                  background: "#111318",
-                  border: "1px solid #1e2430",
-                  padding: "0.4rem 0.75rem",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.5rem",
-                }}
-              >
-                <span style={{ color: "#5a6478", fontSize: "0.7rem", fontFamily: "JetBrains Mono, monospace" }}>
+            <div style={{ display: tab === "preview" ? "none" : "flex", flexDirection: "column" }} className="split-editor-write">
+              <div style={{
+                background: "#1a1228",
+                border: "1px solid #2e1f4a",
+                borderRadius: "6px 6px 0 0",
+                padding: "0.4rem 0.75rem",
+                display: "flex",
+                alignItems: "center",
+                gap: "0.5rem",
+              }}>
+                <span style={{ color: "#7c6a9e", fontSize: "0.7rem", fontFamily: "JetBrains Mono, monospace" }}>
                   editor.md
                 </span>
-                <span style={{ marginLeft: "auto", color: "#1e2430", fontSize: "0.65rem", fontFamily: "JetBrains Mono, monospace" }}>
+                <span style={{ marginLeft: "auto", color: "#3d2f5a", fontSize: "0.65rem", fontFamily: "JetBrains Mono, monospace" }}>
                   {content.split(/\s+/).filter(Boolean).length} words
                 </span>
               </div>
@@ -204,15 +197,16 @@ export default function NoteForm({ action, mode, note }: NoteFormProps) {
                 name="content"
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                placeholder="# My Note&#10;&#10;Start writing in **markdown**...&#10;&#10;```bash&#10;nmap -sV target.com&#10;```"
+                placeholder={"# My Note\n\nStart writing in **markdown**...\n\n```bash\nnmap -sV target.com\n```"}
                 required
                 rows={24}
                 style={{
                   flex: 1,
-                  background: "#0d1014",
-                  border: "1px solid #1e2430",
+                  background: "#130f20",
+                  border: "1px solid #2e1f4a",
                   borderTop: "none",
-                  color: "#e0e0e0",
+                  borderRadius: "0 0 6px 6px",
+                  color: "#ede9fe",
                   fontFamily: "Fira Code, JetBrains Mono, monospace",
                   fontSize: "0.83rem",
                   lineHeight: 1.7,
@@ -222,53 +216,61 @@ export default function NoteForm({ action, mode, note }: NoteFormProps) {
                   minHeight: "400px",
                 }}
                 onFocus={(e) => {
-                  e.target.style.borderColor = "#00ff9d";
-                  e.target.style.boxShadow = "0 0 0 1px rgba(0,255,157,0.15)";
+                  e.target.style.borderColor = "#c4b5fd";
+                  e.target.style.boxShadow = "0 0 0 1px rgba(196,181,253,0.15)";
                 }}
                 onBlur={(e) => {
-                  e.target.style.borderColor = "#1e2430";
+                  e.target.style.borderColor = "#2e1f4a";
                   e.target.style.boxShadow = "none";
                 }}
               />
             </div>
 
             {/* Preview */}
-            <div style={{ display: "flex", flexDirection: "column" }}>
-              <div
-                style={{
-                  background: "#111318",
-                  border: "1px solid #1e2430",
-                  padding: "0.4rem 0.75rem",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.5rem",
-                }}
-              >
-                <span style={{ color: "#5a6478", fontSize: "0.7rem", fontFamily: "JetBrains Mono, monospace" }}>
+            <div style={{ display: tab === "write" ? "none" : "flex", flexDirection: "column" }} className="split-editor-preview">
+              <div style={{
+                background: "#1a1228",
+                border: "1px solid #2e1f4a",
+                borderRadius: "6px 6px 0 0",
+                padding: "0.4rem 0.75rem",
+                display: "flex",
+                alignItems: "center",
+                gap: "0.5rem",
+              }}>
+                <span style={{ color: "#7c6a9e", fontSize: "0.7rem", fontFamily: "JetBrains Mono, monospace" }}>
                   preview
                 </span>
-                <span style={{ marginLeft: "auto", color: "#00ff9d", fontSize: "0.65rem", fontFamily: "JetBrains Mono, monospace" }}>
-                  ● live
+                <span style={{ marginLeft: "auto", color: "#c4b5fd", fontSize: "0.65rem", fontFamily: "JetBrains Mono, monospace" }}>
+                  ✦ live
                 </span>
               </div>
-              <div
-                style={{
-                  flex: 1,
-                  background: "#111318",
-                  border: "1px solid #1e2430",
-                  borderTop: "none",
-                  padding: "1rem",
-                  overflowY: "auto",
-                  minHeight: "400px",
-                }}
-              >
+              <div style={{
+                flex: 1,
+                background: "#1a1228",
+                border: "1px solid #2e1f4a",
+                borderTop: "none",
+                borderRadius: "0 0 6px 6px",
+                padding: "1rem",
+                overflowY: "auto",
+                minHeight: "400px",
+              }}>
                 <MarkdownPreview content={content} />
               </div>
             </div>
           </div>
 
+          {/* On desktop, also show preview alongside — override the hide above */}
+          <style>{`
+            @media (min-width: 769px) {
+              .split-editor-write,
+              .split-editor-preview {
+                display: flex !important;
+              }
+            }
+          `}</style>
+
           {/* Actions */}
-          <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+          <div style={{ display: "flex", gap: "1rem", alignItems: "center", flexWrap: "wrap" }}>
             <SubmitButton mode={mode} />
             <a
               href={mode === "edit" && note ? `/notes/${note.id}` : "/dashboard"}
@@ -278,6 +280,7 @@ export default function NoteForm({ action, mode, note }: NoteFormProps) {
               cancel
             </a>
           </div>
+
         </form>
       </div>
     </div>
