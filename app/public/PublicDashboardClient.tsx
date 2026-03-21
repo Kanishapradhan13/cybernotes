@@ -3,12 +3,9 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import type { Note } from "@/lib/notes";
-import { CATEGORIES } from "@/lib/notes";
 import CategoryBadge from "@/components/CategoryBadge";
 import TagPill from "@/components/TagPill";
 import { getWordCount, getReadTime } from "@/lib/notes";
-
-const ALL_CATEGORIES = ["All", ...CATEGORIES] as const;
 
 function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString("en-US", {
@@ -95,6 +92,11 @@ function PublicNoteCard({ note }: { note: Note }) {
 export default function PublicDashboardClient({ notes }: { notes: Note[] }) {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<string>("All");
+
+  const allCategories = useMemo(() => {
+    const unique = Array.from(new Set(notes.map((n) => n.category).filter(Boolean)));
+    return ["All", ...unique];
+  }, [notes]);
 
   const filtered = useMemo(() => {
     return notes.filter((n) => {
@@ -194,7 +196,7 @@ export default function PublicDashboardClient({ notes }: { notes: Note[] }) {
           paddingBottom: "1.25rem",
           borderBottom: "1px solid #2e1f4a",
         }}>
-          {ALL_CATEGORIES.map((cat) => (
+          {allCategories.map((cat) => (
             <button
               key={cat}
               onClick={() => setActiveCategory(cat)}
