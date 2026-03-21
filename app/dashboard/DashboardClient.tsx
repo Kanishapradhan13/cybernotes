@@ -3,10 +3,7 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import type { Note } from "@/lib/notes";
-import { CATEGORIES } from "@/lib/notes";
 import NoteCard from "@/components/NoteCard";
-
-const ALL_CATEGORIES = ["All", ...CATEGORIES] as const;
 
 export default function DashboardClient({
   notes,
@@ -17,6 +14,11 @@ export default function DashboardClient({
 }) {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<string>("All");
+
+  const allCategories = useMemo(() => {
+    const unique = Array.from(new Set(notes.map((n) => n.category).filter(Boolean)));
+    return ["All", ...unique];
+  }, [notes]);
 
   const filtered = useMemo(() => {
     return notes.filter((n) => {
@@ -48,7 +50,7 @@ export default function DashboardClient({
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.25rem" }}>
               <span style={{ color: "#c4b5fd", fontFamily: "JetBrains Mono, monospace", fontSize: "0.85rem" }}>
-                ✦ cybernotes
+                ✦ blogbykanu
               </span>
             </div>
             <h1
@@ -136,7 +138,7 @@ export default function DashboardClient({
             borderBottom: "1px solid #2e1f4a",
           }}
         >
-          {ALL_CATEGORIES.map((cat) => (
+          {allCategories.map((cat) => (
             <button
               key={cat}
               onClick={() => setActiveCategory(cat)}

@@ -17,214 +17,265 @@ type MockNote = {
 const MOCK_NOTES: MockNote[] = [
   {
     id: "1",
-    category: "Recon",
-    title: "Subdomain enumeration workflow",
-    excerpt: "Start with passive: subfinder, amass, crt.sh. Then active: ffuf with SecLists...",
-    tags: ["recon", "subdomain", "ffuf"],
-    content: `## Subdomain Enumeration Workflow
+    category: "DBMS",
+    title: "Database Normalization — 1NF to BCNF",
+    excerpt: "Normalization removes redundancy. 1NF: atomic values. 2NF: no partial deps. 3NF: no transitive deps...",
+    tags: ["dbms", "normalization", "relational"],
+    content: `## Database Normalization — 1NF to BCNF
 
-### Passive Recon
-Start passive — no direct contact with the target:
-
-\`\`\`bash
-subfinder -d target.com -o subs_passive.txt
-amass enum -passive -d target.com >> subs_passive.txt
-curl -s "https://crt.sh/?q=%.target.com&output=json" | jq '.[].name_value' | sort -u >> subs_passive.txt
-\`\`\`
-
-### Active Brute-Force
-Use SecLists wordlist with ffuf:
-
-\`\`\`bash
-ffuf -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-20000.txt \\
-  -u https://FUZZ.target.com -mc 200,301,302,403
-\`\`\`
-
-### Find Live Hosts
-Pipe everything into httpx to check what's actually alive:
-
-\`\`\`bash
-cat subs_passive.txt | sort -u | httpx -silent -o live_hosts.txt
-\`\`\`
-
-### Screenshot for Triage
-\`\`\`bash
-gowitness file -f live_hosts.txt --screenshot-path ./screenshots/
-\`\`\`
-
-### Tips
-- Always check for **dev**, **staging**, **admin**, **api** subdomains
-- Look for older subdomains on Wayback Machine
-- Check DNS zone transfers: \`dig axfr @ns1.target.com target.com\``,
-  },
-  {
-    id: "2",
-    category: "CTF Writeup",
-    title: "HackTheBox — Keeper writeup",
-    excerpt: "Initial foothold via default KeePass web credentials. Cracked KeePass dump...",
-    tags: ["htb", "keepass", "linux"],
-    content: `## HackTheBox — Keeper Writeup
-
-**Difficulty:** Easy | **OS:** Linux
+Normalization is the process of organizing a relational database to reduce redundancy and improve data integrity.
 
 ---
 
-### Initial Foothold
-Navigated to port 80 — found a **Request Tracker** ticketing system.
-Default credentials worked: \`root:Welcome2023!\`
+### 1NF — First Normal Form
+- Each column holds **atomic** (indivisible) values
+- No repeating groups or arrays in a column
 
-Inside the ticket system, found a note referencing a user **lnorgaard** with password **Welcome2023!**
+**Violation:**
+| StudentID | Courses         |
+|-----------|-----------------|
+| 1         | Math, Science   |
 
-\`\`\`bash
-ssh lnorgaard@10.10.11.227
-# logged in successfully
-\`\`\`
-
-### Privilege Escalation
-Found a zip in the home directory containing a **KeePass .dmp** memory dump and a **.kdbx** database file.
-
-Extract the master password from the memory dump:
-\`\`\`bash
-python3 keepass-dump-masterkey/poc.py -d KeePassDumpFull.dmp
-# Output: ●ødgrød med fløde
-# Actual password: rødgrød med fløde (Danish dessert)
-\`\`\`
-
-Open the .kdbx file with KeePassXC using the recovered password.
-Inside: **root SSH private key** stored as attachment.
-
-\`\`\`bash
-chmod 600 root_key
-ssh -i root_key root@10.10.11.227
-cat /root/root.txt
-\`\`\`
-
-### Flags
-- **User:** \`lnorgaard\` home directory
-- **Root:** SSH key inside KeePass vault`,
-  },
-  {
-    id: "3",
-    category: "Web Exploitation",
-    title: "IDOR to account takeover",
-    excerpt: "PATCH /api/users/{id} — swapped id to victim's. Server only validated session...",
-    tags: ["idor", "auth", "api"],
-    content: `## IDOR to Full Account Takeover
-
-**Severity:** Critical | **CVSS:** 9.1
+**Fixed:** split into separate rows — one course per row.
 
 ---
 
-### Discovery
-While testing a SaaS app, intercepted a profile update request in Burp Suite:
+### 2NF — Second Normal Form
+- Must be in 1NF
+- **No partial dependency** — every non-key attribute depends on the *whole* primary key (applies to composite keys)
 
-\`\`\`http
-PATCH /api/v1/users/8472 HTTP/1.1
-Authorization: Bearer <my_token>
-Content-Type: application/json
+**Example fix:** If (StudentID, CourseID) is the PK but CourseName depends only on CourseID → move CourseName to a separate Courses table.
 
-{
-  "email": "myemail@test.com",
-  "username": "myuser"
-}
+---
+
+### 3NF — Third Normal Form
+- Must be in 2NF
+- **No transitive dependency** — non-key attributes must not depend on other non-key attributes
+
+**Violation:** ZipCode → City (ZipCode is not a key)
+**Fix:** Extract a ZipCodes(ZipCode, City) table.
+
+---
+
+### BCNF — Boyce-Codd Normal Form
+- Stricter version of 3NF
+- For every functional dependency X → Y, X must be a **superkey**
+
+### Quick Reference
 \`\`\`
-
-### Exploitation
-Changed the user ID in the URL from my own (\`8472\`) to a victim's (\`8471\`):
-
-\`\`\`http
-PATCH /api/v1/users/8471 HTTP/1.1
-Authorization: Bearer <my_token>
-
-{
-  "email": "attacker@evil.com"
-}
-\`\`\`
-
-**Result:** 200 OK — email changed on victim's account.
-
-### Full Takeover Chain
-1. IDOR to change victim's email to attacker-controlled address
-2. Trigger "Forgot Password" for that email
-3. Reset link arrives in attacker inbox
-4. Full account takeover ✓
-
-### Root Cause
-Server validated that a **session existed**, but never checked whether the **session owner matched the resource owner**.
-
-### Fix
-\`\`\`python
-# Server should enforce:
-if current_user.id != requested_user_id:
-    return 403, "Forbidden"
+1NF → atomic values
+2NF → no partial deps on composite PK
+3NF → no transitive deps
+BCNF → every determinant is a superkey
 \`\`\``,
   },
   {
-    id: "4",
-    category: "OSINT",
-    title: "Target profiling methodology",
-    excerpt: "LinkedIn → employees → tech stack from job posts. GitHub org → leaked .env...",
-    tags: ["osint", "recon", "social"],
-    content: `## Target Profiling Methodology
-
-A structured approach to building a target profile before engagement.
+    id: "2",
+    category: "SQL",
+    title: "SQL Joins & Aggregations Cheat Sheet",
+    excerpt: "INNER JOIN returns matching rows. LEFT JOIN keeps all left rows. GROUP BY + HAVING for aggregates...",
+    tags: ["sql", "joins", "queries"],
+    content: `## SQL Joins & Aggregations Cheat Sheet
 
 ---
 
-### Step 1 — Corporate Structure
-- **LinkedIn:** Find employees, org chart, tech leads
-- **Job postings:** Reveal tech stack (e.g. "experience with AWS Lambda, Postgres, Terraform")
-- **Crunchbase / LinkedIn Company:** Funding, acquisitions, subsidiaries
+### Types of JOINs
 
-### Step 2 — Technical Footprint
-\`\`\`bash
-# Find all domains and IPs
-theHarvester -d target.com -b all
+\`\`\`sql
+-- INNER JOIN: only matching rows
+SELECT e.name, d.dept_name
+FROM employees e
+INNER JOIN departments d ON e.dept_id = d.id;
 
-# Shodan for exposed infrastructure
-shodan search org:"Target Corp" --fields ip_str,port,hostnames
+-- LEFT JOIN: all rows from left, NULLs for no match on right
+SELECT e.name, d.dept_name
+FROM employees e
+LEFT JOIN departments d ON e.dept_id = d.id;
 
-# Check BGP/ASN data
-curl https://api.bgpview.io/search?query_term=target.com
+-- SELF JOIN: join a table with itself
+SELECT a.name AS employee, b.name AS manager
+FROM employees a
+JOIN employees b ON a.manager_id = b.id;
 \`\`\`
 
-### Step 3 — GitHub Intel
-\`\`\`bash
-# Search GitHub for leaked secrets
-gh search code "target.com" --extension env
-gh search code "api.target.com" password OR secret OR key
+---
+
+### Aggregations
+
+\`\`\`sql
+-- GROUP BY with aggregate functions
+SELECT dept_id, COUNT(*) AS headcount, AVG(salary) AS avg_sal
+FROM employees
+GROUP BY dept_id;
+
+-- HAVING: filter after aggregation (unlike WHERE which filters before)
+SELECT dept_id, COUNT(*) AS headcount
+FROM employees
+GROUP BY dept_id
+HAVING COUNT(*) > 5;
 \`\`\`
 
-Look for:
-- Exposed \`.env\` files in commit history
-- Hardcoded API keys or DB credentials
-- Internal tooling repos accidentally made public
+---
 
-### Step 4 — Email Harvesting
-\`\`\`bash
-theHarvester -d target.com -b linkedin,google,bing -f emails.txt
+### Subqueries & CTEs
+
+\`\`\`sql
+-- Correlated subquery
+SELECT name FROM employees e
+WHERE salary > (SELECT AVG(salary) FROM employees WHERE dept_id = e.dept_id);
+
+-- CTE (Common Table Expression)
+WITH top_earners AS (
+  SELECT * FROM employees WHERE salary > 80000
+)
+SELECT name, dept_id FROM top_earners ORDER BY salary DESC;
 \`\`\`
 
-Cross-reference emails against **HaveIBeenPwned** for breach data.
+---
 
-### Step 5 — Wayback Machine
-\`\`\`bash
-waybackurls target.com | grep -E "\\.(php|asp|jsp|env|config|sql)"
+### Window Functions
+
+\`\`\`sql
+SELECT name, salary,
+  RANK() OVER (PARTITION BY dept_id ORDER BY salary DESC) AS rank_in_dept
+FROM employees;
+\`\`\``,
+  },
+  {
+    id: "3",
+    category: "System Design",
+    title: "Designing Scalable Systems — Core Concepts",
+    excerpt: "CAP theorem: you can only guarantee 2 of 3 — Consistency, Availability, Partition tolerance...",
+    tags: ["system-design", "scalability", "architecture"],
+    content: `## Designing Scalable Systems — Core Concepts
+
+---
+
+### CAP Theorem
+A distributed system can only guarantee **2 of 3**:
+- **C**onsistency — every read gets the latest write
+- **A**vailability — every request gets a response
+- **P**artition tolerance — system works despite network splits
+
+Most real systems choose **AP** (eventual consistency) or **CP** (strong consistency).
+
+---
+
+### Horizontal vs Vertical Scaling
+| | Vertical | Horizontal |
+|---|---|---|
+| How | Bigger machine | More machines |
+| Limit | Hardware ceiling | Near-infinite |
+| Cost | Expensive | Commodity hardware |
+
+---
+
+### Caching Strategies
+\`\`\`
+Cache-aside (lazy loading):
+  1. Check cache → hit? return it
+  2. Miss → query DB → store in cache → return
+
+Write-through:
+  Write to cache AND DB simultaneously — always consistent
+
+Write-back:
+  Write to cache only → async flush to DB — fast but risky
 \`\`\`
 
-Old endpoints, forgotten admin panels, exposed backups.`,
+---
+
+### Load Balancing Algorithms
+- **Round Robin** — requests distributed evenly in order
+- **Least Connections** — send to server with fewest active connections
+- **IP Hash** — same client always hits same server (useful for sessions)
+
+---
+
+### Database Sharding
+Split data across multiple DB instances by a **shard key**:
+\`\`\`
+User IDs 1–1M   → Shard A
+User IDs 1M–2M  → Shard B
+\`\`\`
+Watch out for **hot shards** if the key isn't distributed evenly.`,
+  },
+  {
+    id: "4",
+    category: "DSA",
+    title: "Big O & Essential Data Structures",
+    excerpt: "O(1) constant, O(log n) binary search, O(n) linear scan. Hash maps give O(1) avg lookup...",
+    tags: ["dsa", "algorithms", "complexity"],
+    content: `## Big O & Essential Data Structures
+
+---
+
+### Big O Complexity — Quick Reference
+| Complexity | Name | Example |
+|---|---|---|
+| O(1) | Constant | Hash map lookup |
+| O(log n) | Logarithmic | Binary search |
+| O(n) | Linear | Array scan |
+| O(n log n) | Linearithmic | Merge sort |
+| O(n²) | Quadratic | Bubble sort |
+| O(2ⁿ) | Exponential | Recursive subsets |
+
+---
+
+### Arrays vs Linked Lists
+\`\`\`
+Array:
+  Access: O(1)   Insert/Delete (mid): O(n)   Cache-friendly ✓
+
+Linked List:
+  Access: O(n)   Insert/Delete (head): O(1)   No random access ✗
+\`\`\`
+
+---
+
+### Hash Maps
+- Average: O(1) insert, delete, lookup
+- Worst case (collisions): O(n)
+- Python: \`dict\`, Java: \`HashMap\`, JS: \`Map\`
+
+\`\`\`python
+# Two Sum using hash map — O(n)
+def two_sum(nums, target):
+    seen = {}
+    for i, n in enumerate(nums):
+        diff = target - n
+        if diff in seen:
+            return [seen[diff], i]
+        seen[n] = i
+\`\`\`
+
+---
+
+### Trees
+- **BST** — O(log n) search/insert when balanced
+- **Heap** — O(1) peek max/min, O(log n) insert — used for priority queues
+- **Trie** — prefix lookups in O(L) where L = word length
+
+---
+
+### Sorting Algorithms
+| Algorithm | Best | Average | Worst | Space |
+|---|---|---|---|---|
+| Merge Sort | O(n log n) | O(n log n) | O(n log n) | O(n) |
+| Quick Sort | O(n log n) | O(n log n) | O(n²) | O(log n) |
+| Heap Sort | O(n log n) | O(n log n) | O(n log n) | O(1) |`,
   },
 ];
 
 const CATEGORY_COLORS: Record<string, string> = {
-  Recon: "#c4b5fd",
-  "CTF Writeup": "#f9a8d4",
-  "Web Exploitation": "#f0abfc",
-  Tools: "#e9d5ff",
+  DBMS: "#c4b5fd",
+  SQL: "#f9a8d4",
+  "System Design": "#f0abfc",
+  DSA: "#fde68a",
+  Backend: "#a78bfa",
+  Frontend: "#fb7185",
+  DevOps: "#e9d5ff",
   General: "#ddd6fe",
-  Forensics: "#fde68a",
-  OSINT: "#a78bfa",
-  "Privilege Escalation": "#fb7185",
 };
 
 function NoteModal({ note, onClose }: { note: MockNote; onClose: () => void }) {
@@ -430,7 +481,7 @@ export default function HomePage() {
               color: "#c4b5fd",
               letterSpacing: "0.1em",
             }}>
-              ⚡ hack. document. dominate.
+              ⚡ learn. build. ship.
             </div>
 
             <h1 style={{
@@ -441,11 +492,11 @@ export default function HomePage() {
               color: "#ede9fe",
               marginBottom: "1.5rem",
             }}>
-              Your intel,{" "}
+              Your notes,{" "}
               <span style={{ color: "#c4b5fd", textShadow: "0 0 28px rgba(196,181,253,0.5)" }}>
-                encrypted
+                organized
               </span>
-              <br />&amp; yours alone.
+              <br />&amp; always searchable.
             </h1>
 
             <p style={{
@@ -455,9 +506,9 @@ export default function HomePage() {
               lineHeight: 1.9,
               marginBottom: "2.5rem",
             }}>
-              Document your exploits, writeups &amp; recon notes.
+              Document your learnings, deep-dives &amp; tech notes.
               <br />Tagged, searchable, and locked behind your login —
-              <br />because good intel deserves a safe home.
+              <br />because good knowledge deserves a proper home.
             </p>
 
             <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
@@ -503,7 +554,7 @@ export default function HomePage() {
               fontFamily: "JetBrains Mono, monospace",
               letterSpacing: "0.08em",
             }}>
-              if it's not documented, it didn't happen. — kanisha ✦
+              if it's not written down, you'll forget it. — kanisha ✦
             </p>
           </div>
 
@@ -534,7 +585,7 @@ export default function HomePage() {
                   fontSize: "0.7rem",
                   color: "#7c6a9e",
                 }}>
-                  ✦ cybernotes / dashboard
+                  ✦ blogbykanu / notes
                 </span>
               </div>
 

@@ -4,8 +4,8 @@ import { Toaster } from "react-hot-toast";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "CyberNotes — Your Encrypted Ops Intel",
-  description: "A dark terminal-themed notes app for cybersecurity professionals and CTF hackers.",
+  title: "blogbykanu — Your Tech Notes",
+  description: "A dark terminal-themed blog and notes app for software engineers and tech enthusiasts.",
 };
 
 export default function RootLayout({

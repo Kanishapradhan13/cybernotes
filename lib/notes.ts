@@ -156,15 +156,4 @@ export function getReadTime(content: string): number {
   return Math.max(1, Math.ceil(words / 200));
 }
 
-export const CATEGORIES = [
-  "General",
-  "Recon",
-  "Web Exploitation",
-  "Privilege Escalation",
-  "Forensics",
-  "OSINT",
-  "CTF Writeup",
-  "Tools",
-] as const;
-
-export type Category = (typeof CATEGORIES)[number];
+export type Category = string;

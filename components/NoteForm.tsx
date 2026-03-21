@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useFormStatus } from "react-dom";
 import dynamic from "next/dynamic";
-import { CATEGORIES } from "@/lib/notes";
 import type { Note } from "@/lib/notes";
 import CategoryBadge from "./CategoryBadge";
 
@@ -103,19 +102,15 @@ export default function NoteForm({ action, mode, note }: NoteFormProps) {
               <label style={{ display: "block", color: "#7c6a9e", fontFamily: "JetBrains Mono, monospace", fontSize: "0.75rem", marginBottom: "0.4rem" }}>
                 category
               </label>
-              <select
+              <input
                 name="category"
+                type="text"
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
+                placeholder="e.g. DBMS, Backend, DSA..."
                 className="input-terminal"
-                style={{ minWidth: "180px", cursor: "pointer" }}
-              >
-                {CATEGORIES.map((c) => (
-                  <option key={c} value={c} style={{ background: "#1a1228" }}>
-                    {c}
-                  </option>
-                ))}
-              </select>
+                style={{ minWidth: "180px" }}
+              />
             </div>
           </div>
 
@@ -136,7 +131,7 @@ export default function NoteForm({ action, mode, note }: NoteFormProps) {
               type="text"
               value={tags}
               onChange={(e) => setTags(e.target.value)}
-              placeholder="nmap, sql-injection, linux-privesc..."
+              placeholder="sql, system-design, react, algorithms..."
               className="input-terminal"
             />
           </div>
@@ -197,7 +192,7 @@ export default function NoteForm({ action, mode, note }: NoteFormProps) {
                 name="content"
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                placeholder={"# My Note\n\nStart writing in **markdown**...\n\n```bash\nnmap -sV target.com\n```"}
+                placeholder={"# My Note\n\nStart writing in **markdown**...\n\n```sql\nSELECT * FROM notes WHERE user_id = ?;\n```"}
                 required
                 rows={24}
                 style={{

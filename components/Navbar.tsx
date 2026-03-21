@@ -54,7 +54,7 @@ export default function Navbar() {
                 letterSpacing: "0.05em",
               }}
             >
-              CYBER<span style={{ color: "#f0abfc" }}>NOTES</span>
+              BLOG<span style={{ color: "#f0abfc" }}>BYKANU</span>
             </span>
           </Link>
 
