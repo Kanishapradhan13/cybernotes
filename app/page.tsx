@@ -481,7 +481,7 @@ export default function HomePage() {
               color: "#c4b5fd",
               letterSpacing: "0.1em",
             }}>
-              ⚡ learn. build. ship.
+              ⚡ learn. build. journal.
             </div>
 
             <h1 style={{

@@ -2,6 +2,7 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { updateNote } from "@/lib/notes";
 
 export async function updateNoteAction(id: string, formData: FormData) {
@@ -31,5 +32,6 @@ export async function updateNoteAction(id: string, formData: FormData) {
     tags,
   });
 
+  revalidatePath("/public");
   redirect(`/notes/${id}`);
 }

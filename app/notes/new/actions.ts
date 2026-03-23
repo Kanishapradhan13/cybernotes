@@ -2,6 +2,7 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { createNote } from "@/lib/notes";
 
 export async function createNoteAction(formData: FormData) {
@@ -31,5 +32,6 @@ export async function createNoteAction(formData: FormData) {
     tags,
   });
 
+  revalidatePath("/public");
   redirect("/dashboard");
 }
