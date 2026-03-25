@@ -5,7 +5,7 @@ import { useFormStatus } from "react-dom";
 import dynamic from "next/dynamic";
 import type { Note } from "@/lib/notes";
 import CategoryBadge from "./CategoryBadge";
-import { uploadImageAction } from "@/app/actions/upload-image";
+import { getImageUploadUrl } from "@/app/actions/upload-image";
 
 const MarkdownPreview = dynamic(() => import("./MarkdownPreview"), { ssr: false });
 
@@ -57,11 +57,28 @@ export default function NoteForm({ action, mode, note }: NoteFormProps) {
 
   const insertImageAtCursor = useCallback(async (file: File) => {
     setUploadError(null);
+
+    if (!file.type.startsWith("image/")) {
+      setUploadError("Only image files are allowed");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setUploadError("Image must be under 5 MB");
+      return;
+    }
+
     setUploading(true);
     try {
-      const fd = new FormData();
-      fd.append("file", file);
-      const { url } = await uploadImageAction(fd);
+      const { signedUrl, publicUrl } = await getImageUploadUrl(file.name);
+
+      const res = await fetch(signedUrl, {
+        method: "PUT",
+        body: file,
+        headers: { "Content-Type": file.type },
+      });
+      if (!res.ok) throw new Error(`Upload failed: ${res.statusText}`);
+
+      const url = publicUrl;
 
       const textarea = textareaRef.current;
       const altText = file.name.replace(/\.[^.]+$/, "") || "image";
