@@ -74,7 +74,7 @@ export default async function NoteViewPage({
             }}>
               <CategoryBadge category={note.category} />
 
-              {/* Edit + Delete at top corner */}
+              {/* Edit + Download + Delete at top corner */}
               <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", alignItems: "center" }}>
                 <Link
                   href={`/notes/${note.id}/edit`}
@@ -94,6 +94,13 @@ export default async function NoteViewPage({
                 >
                   ✏ edit
                 </Link>
+                <a
+                  href={`/notes/${note.id}/download`}
+                  className="btn-neon"
+                  style={{ padding: "0.4rem 0.9rem", fontSize: "0.75rem" }}
+                >
+                  ↓ pdf
+                </a>
                 <DeleteButton noteId={note.id} deleteAction={deleteNoteAction} />
               </div>
             </div>
